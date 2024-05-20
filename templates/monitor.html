@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CPU Usage Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Freeman&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url("https://images.unsplash.com/photo-1713978931239-5e09e582bf69?q=80&w=1976&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+            background-position: 0 50%;
+            margin: 0;
+        }
+        .main-container {
+            width: 600px;
+        }
+        .ec2-metainfo {
+            color: white;
+            font-size: 30px;
+            font-family: "Freeman", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .cpu-usage-text {
+            display: flex;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            font-family: "Freeman", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            margin: 0 0 5px 0;
+        }
+        .cpu-usage-text > p {
+            margin: 0;
+        }
+        .progress-container {
+            position: relative;
+            max-width: 600px;
+            border: solid 1px #eee;
+            border-radius: 17px;
+            overflow: hidden;
+            box-shadow: 0 5px 45px rgba(0, 0, 0, 1);
+        }
+        .progress-bar {
+            position: relative;
+            height: 30px;
+            width: 0;
+            background-color: green;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            transition: width 0.5s, background-color 0.5s;
+        }
+        .progress-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: "Freeman", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+        .cpu-load-btn-container {
+            display: flex;
+            justify-content: center;
+            max-width: 600px;
+            margin-top: 30px;
+        }
+        .cpu-load-btn {
+            width: 120px;
+            height: 45px;
+            font-family: "Freeman", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            background: linear-gradient(45deg, #046a04, #259f25);
+            border: none;
+            border-radius: 7px;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 17px;
+            margin: 4px 2px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .cpu-load-btn:not(:disabled):hover {
+            background: linear-gradient(45deg, #006400, #228B22);
+        }
+        .disabled-button {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% if instance_id %}
+        <div class="ec2-metainfo">
+            <p>Instance ID: {{ instance_id }}</p>
+        </div>
+        {% endif %}
+        {% if a_zone %}
+        <div class="ec2-metainfo">
+            <p>Availability Zone: {{ a_zone }}</p>
+        </div>
+        {% endif %}
+        <div class="cpu-usage-text">
+            <p>CPU Usage:</p>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+            <div class="progress-text" id="progress-text">0%</div>
+        </div>
+        <div class="cpu-load-btn-container">
+            <button class="cpu-load-btn" id="cpu-load-btn" onclick="loadCpu()">Load CPU</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function getColor(percentage) {
+            var r = Math.min(255, Math.floor((percentage / 100) * 255));
+            var g = Math.min(255, Math.floor((1 - (percentage / 100)) * 255));
+            return `rgb(${r}, ${g}, 0)`;
+        }
+
+        function updateProgressBar(usage) {
+            var progressBar = document.getElementById('progress-bar');
+            var progressText = document.getElementById('progress-text');
+            progressBar.style.width = usage + '%';
+            progressBar.style.backgroundColor = getColor(usage);
+            progressText.textContent = usage + '%';
+        }
+
+        function fetchCpuUsage() {
+            $.ajax({
+                url: '/cpu-usage',
+                method: 'GET',
+                success: function(data) {
+                    updateProgressBar(data.cpu);
+                }
+            });
+        }
+
+        function disableLoadBtn() {
+            let loadBtn = document.getElementById('cpu-load-btn');
+            loadBtn.disabled = true;
+            loadBtn.classList.add('disabled-button');
+        }
+        function enableLoadBtn() {
+            let loadBtn = document.getElementById('cpu-load-btn');
+            loadBtn.disabled = false;
+            loadBtn.classList.remove('disabled-button');
+        }
+
+        function loadCpu() {
+            disableLoadBtn()
+            $.ajax({
+                url: '/cpu-load',
+                method: 'GET',
+                success: function(data) {
+                    if (data.result === "ok")
+                        enableLoadBtn()
+                }
+            });
+        }
+
+        setInterval(fetchCpuUsage, 1000);
+    </script>
+</body>
+</html>
