@@ -20,3 +20,8 @@ def cpu_load(request):
 
 def cpu_usage(request):
     return JsonResponse({"cpu": psutil.cpu_percent()})
+
+
+def process(request):
+    load_cpu(1, 100)
+    return JsonResponse({"result": "ok"})

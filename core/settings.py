@@ -129,7 +129,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 INSTANCE_ID, A_ZONE = None, None
-id_doc = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document").json()
+try:
+    id_doc = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document", timeout=2).json()
+except:
+    id_doc = None
 INSTANCE_IDENTITY_DOCUMENT = os.environ.get('INSTANCE_IDENTITY_DOCUMENT', id_doc)
 if INSTANCE_IDENTITY_DOCUMENT:
     identity = json.loads(INSTANCE_IDENTITY_DOCUMENT)
