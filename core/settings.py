@@ -133,8 +133,13 @@ try:
     id_doc = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document", timeout=2).json()
 except:
     id_doc = None
-INSTANCE_IDENTITY_DOCUMENT = os.environ.get('INSTANCE_IDENTITY_DOCUMENT', id_doc)
-if INSTANCE_IDENTITY_DOCUMENT:
-    identity = json.loads(INSTANCE_IDENTITY_DOCUMENT)
-    INSTANCE_ID = identity['instanceId']
-    A_ZONE = identity['availabilityZone']
+
+if id_doc:
+    INSTANCE_ID = id_doc['instanceId']
+    A_ZONE = id_doc['availabilityZone']
+else:
+    INSTANCE_IDENTITY_DOCUMENT = os.environ.get('INSTANCE_IDENTITY_DOCUMENT')
+    if INSTANCE_IDENTITY_DOCUMENT:
+        identity = json.loads(INSTANCE_IDENTITY_DOCUMENT)
+        INSTANCE_ID = identity['instanceId']
+        A_ZONE = identity['availabilityZone']
